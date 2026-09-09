@@ -137,11 +137,15 @@ ul.did li{font-size:21px;color:var(--body)}
 .pg .lock img{max-height:none}
 
 html,body{background:#0b0b0c;overflow:hidden;height:100%}
-#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{position:fixed;inset:0;overflow:hidden}
 /* The slides are authored at a fixed 1920x1080; scale the whole box to whatever the
-   window is rather than reflowing anything, so what shows is exactly the built slide. */
-#scaler{width:1920px;height:1080px;transform-origin:center center;position:relative}
-#scaler .pg{position:absolute;inset:0;display:none}
+   window is rather than reflowing anything, so what shows is exactly the built slide.
+   Centring is done by the transform itself (pin top-left, then translate by half the
+   leftover space) and NOT by flex: a flex parent centres the child on its pre-transform
+   1920px width, which leaves the scaled slide visibly off to one side. */
+#scaler{width:1920px;height:1080px;transform-origin:0 0;position:absolute;left:0;top:0}
+/* .pg is flex with its own padding; without this it can compute wider than 1920. */
+#scaler .pg{position:absolute;left:0;top:0;width:1920px;height:1080px;display:none}
 #scaler .pg.on{display:flex}
 #hud{position:fixed;right:18px;bottom:14px;color:rgba(255,255,255,.55);
      font:500 13px/1 'Poppins',sans-serif;font-variant-numeric:tabular-nums;
@@ -600,7 +604,10 @@ html,body{background:#0b0b0c;overflow:hidden;height:100%}
                     t=setTimeout(function(){hud.classList.remove('show');},1400); }
   function fit(){
     var s=Math.min(innerWidth/1920, innerHeight/1080);
-    sc.style.transform='scale('+s+')';
+    // Origin is 0 0, so centre by translating half the leftover space. Doing it here
+    // rather than with flex is what keeps the slide actually centred once scaled.
+    var x=(innerWidth-1920*s)/2, y=(innerHeight-1080*s)/2;
+    sc.style.transform='translate('+x+'px,'+y+'px) scale('+s+')';
   }
   function show(n,quiet){
     i=Math.max(0,Math.min(S.length-1,n));
