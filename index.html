@@ -152,15 +152,20 @@ html,body{background:#0b0b0c;overflow:hidden;height:100%}
      background:rgba(0,0,0,.45);padding:7px 11px;border-radius:20px;user-select:none;
      opacity:0;transition:opacity .25s;pointer-events:none}
 #hud.show{opacity:1}
-/* Jump to the client wall from anywhere. Always clickable, fades up on hover or when the
-   HUD flashes, so it is out of the way while presenting but never hunted for. */
-#idx{position:fixed;left:18px;bottom:14px;z-index:5;cursor:pointer;border:0;
-     font:600 13px/1 'Poppins',sans-serif;color:rgba(255,255,255,.72);
-     background:rgba(0,0,0,.45);padding:9px 14px;border-radius:20px;user-select:none;
-     opacity:.18;transition:opacity .2s,background .2s;display:flex;align-items:center;gap:7px}
-#idx:hover{opacity:1;background:rgba(0,0,0,.7)}
-#idx.show{opacity:.75}
-#idx svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.2}
+/* Jump to the client wall from anywhere. Kept plainly visible: an earlier version faded it
+   to .18 while idle, which read as "not there" rather than "out of the way". */
+/* Top-right, and positioned by JS against the slide box rather than the window: the deck
+   is letterboxed at most window shapes, so a window-pinned control lands in the black band
+   or gets clipped. Top-right also stays clear of the Tempest mark on the top-left. */
+#idx{position:fixed;z-index:5;cursor:pointer;border:0;
+     font:600 14px/1 'Poppins',sans-serif;color:#fff;
+     background:rgba(0,0,0,.62);padding:11px 17px;border-radius:22px;user-select:none;
+     opacity:.92;transition:opacity .2s,background .2s,transform .12s;
+     display:flex;align-items:center;gap:8px;
+     box-shadow:0 4px 16px rgba(0,0,0,.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#idx:hover{opacity:1;background:rgba(0,0,0,.82);transform:translateY(-1px)}
+#idx:active{transform:translateY(0)}
+#idx svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2}
 @media print{#hud,#idx{display:none}}
 </style></head><body><section class="pg dark" data-sec="Overview" style="padding:0">
   <div style="position:absolute;inset:0;background:linear-gradient(125deg,#00446E 0%,#00598F 45%,#003656 100%)"></div>
@@ -623,15 +628,19 @@ html,body{background:#0b0b0c;overflow:hidden;height:100%}
   document.body.appendChild(idx);
   idx.addEventListener('click',function(e){ e.stopPropagation(); show(IDX); });
   var t;
-  function flash(){ hud.classList.add('show'); idx.classList.add('show'); clearTimeout(t);
-                    t=setTimeout(function(){hud.classList.remove('show');
-                                            idx.classList.remove('show');},1400); }
+  // The index button stays visible on its own; only the slide counter flashes.
+  function flash(){ hud.classList.add('show'); clearTimeout(t);
+                    t=setTimeout(function(){hud.classList.remove('show');},1400); }
   function fit(){
     var s=Math.min(innerWidth/1920, innerHeight/1080);
     // Origin is 0 0, so centre by translating half the leftover space. Doing it here
     // rather than with flex is what keeps the slide actually centred once scaled.
     var x=(innerWidth-1920*s)/2, y=(innerHeight-1080*s)/2;
     sc.style.transform='translate('+x+'px,'+y+'px) scale('+s+')';
+    // Sit the control just inside the slide's own top-right corner, so it never strands
+    // in the letterbox band however the window is shaped.
+    idx.style.left=(x+1920*s-idx.offsetWidth-22)+'px';
+    idx.style.top=(y+18)+'px';
   }
   function show(n,quiet){
     i=Math.max(0,Math.min(S.length-1,n));
